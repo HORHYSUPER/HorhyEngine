@@ -1,0 +1,23 @@
+Defines
+{
+	ALPHA_TEST
+	MAX_BONE_MATRICES
+	VERTEX_COUNT
+	SKINNED_MESH
+	DEPTH_ONLY
+	BLEND_SHAPE_DEFORMER_COUNT
+}
+VertexShader
+{
+  Model.vsh
+}
+GeometryShader
+{
+  GridFill.gsh
+}
+PixelShader
+{ 
+  GridFill.psh
+}
+
+

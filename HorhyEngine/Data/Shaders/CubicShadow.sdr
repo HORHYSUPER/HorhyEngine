@@ -1,0 +1,13 @@
+Defines
+{
+}
+VertexShader
+{
+  FullScreenQuad.vsh
+}
+PixelShader
+{ 
+  CubicShadow.psh
+}
+
+

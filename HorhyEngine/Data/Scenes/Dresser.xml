@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene>
+  <scenename>Data/Models/Dresser.FBX</scenename>
+  <nodeProp>    
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Furniture_01_Dresser_Dresser02_Closed_CZER_ND_Smesh</Model>
+  </nodeProp>
+</scene>

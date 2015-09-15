@@ -1,0 +1,128 @@
+#include "globals.hlsl"
+#include "AdaptiveModel.hlsl"
+
+#define MAX_BONE_MATRICES 64
+#ifndef BLEND_SHAPE_DEFORMER_COUNT
+#define BLEND_SHAPE_DEFORMER_COUNT 16
+#endif
+
+struct Influence
+{
+	vector position;
+	vector normal;
+};
+
+Buffer<float4> g_DensityBuffer : register(CUSTOM0_TEX_BP);
+
+GLOBAL_CAMERA_UB(cameraUB);
+
+cbuffer CustomUB: register(CUSTOM0_UB_BP)
+{
+	struct
+	{
+		matrix	mWorld;                            // World matrix
+		float	material;							// Obfect ID, or anything else ID
+		vector	vTessellationFactor;               // Edge, inside, minimum tessellation factor and 1/desired triangle size
+		float	vdetailTessellationHeightScale;    // Height scale for detail tessellation of grid surface
+		vector	vFrustumPlaneEquation[4];          // View frustum plane equations
+		matrix	mConstBone[MAX_BONE_MATRICES];
+		vector	vDiffuseColor;
+		float	specularLevel;
+		float	timeElapsed;
+		bool	hasDiffuseTexture;
+		bool	hasSpecularTexture;
+		bool	hasNormalTexture;
+	}modelCustomUB;
+};
+
+struct VS_OUTPUT_HS_INPUT
+{
+	float4 vPosition    : SV_POSITION;
+	float4 vWorldPos	: POSITION;
+	float3 vNormal		: NORMAL;
+	float3 vBinormal	: BINORMAL;
+	float3 vTangent		: TANGENT;
+	float2 texCoord		: TEXCOORD0;
+	uint RTIndex : RTARRAYINDEX;
+};
+
+struct HS_CONSTANT_DATA_OUTPUT
+{
+    float    Edges[3]        : SV_TessFactor;
+    float    Inside          : SV_InsideTessFactor;
+};
+
+struct HS_CONTROL_POINT_OUTPUT
+{
+	float4 vPosition    : SV_POSITION;
+	float4 vWorldPos	: POSITION;
+	float3 vNormal		: NORMAL;
+	float3 vBinormal	: BINORMAL;
+	float3 vTangent		: TANGENT;
+	float2 texCoord		: TEXCOORD0;
+	uint RTIndex : RTARRAYINDEX;
+};
+
+HS_CONSTANT_DATA_OUTPUT ConstantsHS( InputPatch<VS_OUTPUT_HS_INPUT, 3> p, uint PatchID : SV_PrimitiveID )
+{
+    HS_CONSTANT_DATA_OUTPUT output  = (HS_CONSTANT_DATA_OUTPUT)0;
+	float4 vEdgeTessellationFactors = modelCustomUB.vTessellationFactor.xxxy;
+
+	// Get the screen space position of each control point
+	float2 f2EdgeScreenPosition0 =
+		GetScreenSpacePosition(p[0].vWorldPos.xyz, cameraUB.viewProjMatrix, cameraUB.vScreenResolution.x, cameraUB.vScreenResolution.y);
+	float2 f2EdgeScreenPosition1 =
+		GetScreenSpacePosition(p[1].vWorldPos.xyz, cameraUB.viewProjMatrix, cameraUB.vScreenResolution.x, cameraUB.vScreenResolution.y);
+	float2 f2EdgeScreenPosition2 =
+		GetScreenSpacePosition(p[2].vWorldPos.xyz, cameraUB.viewProjMatrix, cameraUB.vScreenResolution.x, cameraUB.vScreenResolution.y);
+	
+	// Calculate edge tessellation factors based on desired screen space tessellation value
+	vEdgeTessellationFactors.x = modelCustomUB.vTessellationFactor.w * distance(f2EdgeScreenPosition2, f2EdgeScreenPosition1);
+	vEdgeTessellationFactors.y = modelCustomUB.vTessellationFactor.w * distance(f2EdgeScreenPosition2, f2EdgeScreenPosition0);
+	vEdgeTessellationFactors.z = modelCustomUB.vTessellationFactor.w * distance(f2EdgeScreenPosition0, f2EdgeScreenPosition1);
+	vEdgeTessellationFactors.w = 0.33 * (vEdgeTessellationFactors.x + vEdgeTessellationFactors.y + vEdgeTessellationFactors.z);
+
+	// Retrieve edge density from edge density buffer (swizzle required to match vertex ordering)
+	vEdgeTessellationFactors *= g_DensityBuffer.Load(PatchID).yzxw;
+
+	// Assign tessellation levels
+	output.Edges[0] = vEdgeTessellationFactors.x;
+	output.Edges[1] = vEdgeTessellationFactors.y;
+	output.Edges[2] = vEdgeTessellationFactors.z;
+	output.Inside = vEdgeTessellationFactors.w;
+
+	// View frustum culling
+	bool bViewFrustumCull = ViewFrustumCull(p[0].vWorldPos, p[1].vWorldPos, p[2].vWorldPos, modelCustomUB.vFrustumPlaneEquation, modelCustomUB.vdetailTessellationHeightScale);
+	if (bViewFrustumCull)
+	{
+		// Set all tessellation factors to 0 if frustum cull test succeeds
+		output.Edges[0] = 0.0;
+		output.Edges[1] = 0.0;
+		output.Edges[2] = 0.0;
+		output.Inside = 0.0;
+	}
+
+    return output;
+}
+
+[domain("tri")]
+[partitioning("fractional_odd")]
+[outputtopology("triangle_cw")]
+[outputcontrolpoints(3)]
+[patchconstantfunc("ConstantsHS")]
+[maxtessfactor(15.0)]
+HS_CONTROL_POINT_OUTPUT main(InputPatch<VS_OUTPUT_HS_INPUT, 3> inputPatch, uint uCPID : SV_OutputControlPointID)
+{
+	HS_CONTROL_POINT_OUTPUT    output = (HS_CONTROL_POINT_OUTPUT)0;
+	
+	// Copy inputs to outputs
+	output.vPosition = inputPatch[uCPID].vPosition;
+	output.vWorldPos = inputPatch[uCPID].vWorldPos;
+	output.vNormal = inputPatch[uCPID].vNormal;
+	output.vBinormal = inputPatch[uCPID].vBinormal;
+	output.vTangent = inputPatch[uCPID].vTangent;
+	output.texCoord = inputPatch[uCPID].texCoord;
+	output.RTIndex = inputPatch[uCPID].RTIndex;
+
+    return output;
+}

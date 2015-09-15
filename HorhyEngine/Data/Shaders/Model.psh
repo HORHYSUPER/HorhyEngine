@@ -1,0 +1,89 @@
+#include "globals.hlsl"
+#include "AdaptiveModel.hlsl"
+
+#define MAX_BONE_MATRICES 64
+#ifndef BLEND_SHAPE_DEFORMER_COUNT
+#define BLEND_SHAPE_DEFORMER_COUNT 16
+#endif
+
+struct Influence
+{
+	vector position;
+	vector normal;
+};
+
+Texture2D g_colorMap : register(COLOR_TEX_BP);
+Texture2D g_nmhTexture :  register(NORMAL_TEX_BP);
+Texture2D g_specularMap: register(SPECULAR_TEX_BP);
+
+SamplerState g_samLinear : register(COLOR_SAM_BP);
+
+GLOBAL_CAMERA_UB(cameraUB);
+
+cbuffer CustomUB: register(CUSTOM0_UB_BP)
+{
+	struct
+	{
+		matrix	mWorld;								// World matrix
+		float	material;							// Obfect ID, or anything else ID
+		vector	vTessellationFactor;				// Edge, inside, minimum tessellation factor and 1/desired triangle size
+		float	vdetailTessellationHeightScale;		// Height scale for detail tessellation of grid surface
+		vector	vFrustumPlaneEquation[4];			// View frustum plane equations
+		matrix	mConstBone[MAX_BONE_MATRICES];
+		vector	vDiffuseColor;
+		float	specularLevel;
+		float	timeElapsed;
+		bool	hasDiffuseTexture;
+		bool	hasSpecularTexture;
+		bool	hasNormalTexture;
+	}customUB;
+};
+
+struct PS_INPUT
+{
+	float4 vPosition        : SV_POSITION;
+	float4 vWorldPos		: POSITION;
+	float3 vNormal			: NORMAL;
+	float3 vBinormal		: BINORMAL;
+	float3 vTangent			: TANGENT;
+	float2 texCoord			: TEXCOORD0;
+	uint RTIndex : SV_RenderTargetArrayIndex;
+};
+
+struct PS_OUTPUT
+{
+	float4 position : SV_TARGET0;
+	float4 color : SV_TARGET1;
+	float4 normal : SV_TARGET2;
+};
+
+PS_OUTPUT main(PS_INPUT i)
+{
+	PS_OUTPUT output;
+
+	float4 diffuseColor = customUB.vDiffuseColor;
+	float specularLevel = customUB.specularLevel;
+	float3 normal = i.vNormal;
+
+	if (customUB.hasDiffuseTexture)
+		diffuseColor = g_colorMap.Sample(g_samLinear, i.texCoord);
+
+	if (customUB.hasSpecularTexture)
+		specularLevel = g_specularMap.Sample(g_samLinear, i.texCoord).r;
+
+	if (customUB.hasNormalTexture)
+	{
+		float4 vNormalHeight = g_nmhTexture.Sample(g_samLinear, i.texCoord);
+		float3 vNormalTS = normalize(vNormalHeight * 2.0f - 1.0f);
+		float3x3 transmat = float3x3(i.vTangent.x, i.vBinormal.x, i.vNormal.x,
+			i.vTangent.y, i.vBinormal.y, i.vNormal.y,
+			i.vTangent.z, i.vBinormal.z, i.vNormal.z);
+		normal = normalize(mul(transmat, vNormalTS));
+	}
+
+	output.position = float4(i.vWorldPos.xyz, customUB.material);
+	output.color = float4(diffuseColor.rgb, specularLevel);
+	output.normal = float4(normal, 2.0f);
+
+	return output;
+}

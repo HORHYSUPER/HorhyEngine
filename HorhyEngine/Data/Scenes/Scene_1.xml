@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene>
+  <scenename>Data/Models/Scene_1.FBX</scenename>
+  <nodeProp>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere001</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere002</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere003</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere004</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere005</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere006</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere007</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere008</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Teapot001</Model>
+  </nodeProp>
+</scene>

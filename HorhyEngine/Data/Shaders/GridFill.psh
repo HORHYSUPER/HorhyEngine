@@ -1,0 +1,129 @@
+#include "globals.hlsl"
+#include "globalIllum.shi"
+
+Texture2D colorMap: register(/*COLOR_TEX_BP*/t0);
+SamplerState colorMapSampler: register(/*COLOR_SAM_BP*/s0);
+
+RWTexture3D<float4> g_VoxelGridColor: register(u0);
+RWTexture3D<float4> g_VoxelGridNormal: register(u1);
+
+cbuffer CustomUB: register(CUSTOM0_UB_BP)
+{
+	struct
+	{
+		matrix	mWorld;
+		vector	vTessellationFactor;               // Edge, inside, minimum tessellation factor and 1/desired triangle size
+		float	vdetailTessellationHeightScale;    // Height scale for detail tessellation of grid surface
+		vector	vFrustumPlaneEquation[4];          // View frustum plane equations
+		matrix	mConstBone[MAX_BONE_MATRICES];
+		vector	vDiffuseColor;
+		float	specularLevel;
+		float	timeElapsed;
+		bool	hasDiffuseTexture;
+		bool	hasSpecularTexture;
+		bool	hasNormalTexture;
+	}modelCustomUB;
+};
+
+cbuffer CustomUB: register(CUSTOM1_UB_BP)
+{
+	struct
+	{
+		float voxelizeSize;
+		float voxelSize;
+		float voxelizeDimension;
+		vector voxelizePosition;
+	}voxelCustomUB;
+};
+
+struct GS_Output
+{
+	float4 vPosition	: SV_POSITION;
+	float3 vWorldPos	: POSITION;
+	float3 vNormal		: NORMAL;
+	float3 vBinormal	: BINORMAL;
+	float3 vTangent		: TANGENT;
+	float2 texCoord		: TEXCOORD;
+};
+
+static const float3 faceVectors[4] =
+{
+	float3(0.0f, -0.57735026f, 0.81649661f),
+	float3(0.0f, -0.57735026f, -0.81649661f),
+	float3(-0.81649661f, 0.57735026f, 0.0f),
+	float3(0.81649661f, 0.57735026f, 0.0f)
+};
+
+uint GetNormalIndex(in float3 normal, out float dotProduct)
+{
+	float4x3 faceMatrix;
+	faceMatrix[0] = faceVectors[0];
+	faceMatrix[1] = faceVectors[1];
+	faceMatrix[2] = faceVectors[2];
+	faceMatrix[3] = faceVectors[3];
+	float4 dotProducts = mul(faceMatrix, normal);
+	float maximum = max(max(dotProducts.x, dotProducts.y), max(dotProducts.z, dotProducts.w));
+	uint index;
+	if (maximum == dotProducts.x)
+		index = 0;
+	else if (maximum == dotProducts.y)
+		index = 1;
+	else if (maximum == dotProducts.z)
+		index = 2;
+	else
+		index = 3;
+
+	dotProduct = dotProducts[index];
+	return index;
+}
+
+void main(GS_Output input)
+{
+	// get surface color 
+	float4 diffuseColor = modelCustomUB.vDiffuseColor;
+
+	if (modelCustomUB.hasDiffuseTexture)
+		diffuseColor = colorMap.Sample(colorMapSampler, input.texCoord);
+
+	// encode color in linear space into unsigned integer
+	//float3 baseLinear = lerp(base / 12.92f, pow((base + 0.055f) / 1.055f, 2.4f), base>0.04045f);
+	//uint colorOcclusionMask = EncodeColor(baseLinear);
+
+	// Since voxels are a simplified representation of the actual scene, high frequency information
+	// gets lost. In order to amplify color bleeding in the final global illumination output, colors
+	// with high difference in their color channels (called here contrast) are preferred. By writing
+	// the contrast value (0-255) in the highest 8 bit of the color-mask, automatically colors with 
+	// high contrast will dominate, since we write the results with an InterlockedMax into the voxel-
+	// grids. The contrast value is calculated in SRGB space.
+	//float contrast = length(base.rrg - base.gbb) / (sqrt(2.0f) + base.r + base.g + base.b);
+	//uint iContrast = uint(contrast*127.0);
+	//colorOcclusionMask |= iContrast << 24u;
+
+	// encode occlusion into highest bit
+	//colorOcclusionMask |= 1 << 31u;
+
+	//float3 normal = normalize(input.vNormal.xyz);
+	//uint normalMask = EncodeNormal(normal);
+
+	//float dotProduct;
+	//uint normalIndex = GetNormalIndex(normal, dotProduct);
+	//uint iDotProduct = uint(saturate(dotProduct)*31.0f);
+	//normalMask |= iDotProduct << 27u;
+
+	float3 offset = (input.vWorldPos.xyz - voxelCustomUB.voxelizePosition.xyz);
+	//offset = round(offset);
+
+	// get position in the voxel-grid
+	int3 voxelPos = offset / voxelCustomUB.voxelSize + (voxelCustomUB.voxelizeSize / voxelCustomUB.voxelSize) / 2;
+
+	// Write out colorOcclusionMask atomically to avoid raise conditions. Only output voxels that are inside the grid boundaries.
+	if ((voxelPos.x > -1) && (voxelPos.x < voxelCustomUB.voxelizeDimension) &&
+		(voxelPos.y > -1) && (voxelPos.y < voxelCustomUB.voxelizeDimension) &&
+		(voxelPos.z > -1) && (voxelPos.z < voxelCustomUB.voxelizeDimension))
+	{
+		//InterlockedMax(g_VoxelGridColor[voxelPos], colorOcclusionMask);
+		//InterlockedMax(g_VoxelGridNormal[voxelPos], normalMask);
+		g_VoxelGridColor[voxelPos] = float4(diffuseColor.rgb, 1.0f);
+		g_VoxelGridNormal[voxelPos] = float4(input.vNormal, 1.0f);
+	}
+}

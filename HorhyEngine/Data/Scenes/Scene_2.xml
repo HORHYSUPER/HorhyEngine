@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene>
+  <scenename>Data/Models/Scene_2.FBX</scenename>
+  <nodeProp>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere001</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere002</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere003</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere004</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere005</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere006</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere007</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere008</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere009</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere010</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere011</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere012</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere013</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere014</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere015</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere016</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere017</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere018</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere019</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere020</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere021</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere022</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere023</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere024</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere025</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere026</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere027</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere028</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere029</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere030</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere031</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere032</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere033</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere034</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere035</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere036</Model>
+    <Model physType="rigidDynamic" detailTessellationHeightScale="0">Sphere037</Model>
+  </nodeProp>
+</scene>

@@ -1,0 +1,101 @@
+#include "globals.hlsl"
+
+#ifndef MSAA
+#define MSAA 1
+#endif
+
+#if MSAA > 1
+Texture2DMS<float4>	positionMap		: register(CUSTOM0_TEX_BP);
+Texture2DMS<float4>	colorMap		: register(CUSTOM1_TEX_BP);
+Texture2DMS<float4>	normalMap		: register(CUSTOM2_TEX_BP);
+#else
+Texture2D<float4>	positionMap		: register(CUSTOM0_TEX_BP);
+Texture2D<float4>	colorMap		: register(CUSTOM1_TEX_BP);
+Texture2D<float4>	normalMap		: register(CUSTOM2_TEX_BP);
+#endif
+TextureCube<float>	g_texReflectCube	: register(CUSTOM3_TEX_BP);
+
+SamplerState SampleTypePoint : register(COLOR_SAM_BP);
+SamplerComparisonState SamplerTypeComparisionPoint : register(CUSTOM0_SAM_BP);
+
+GLOBAL_CAMERA_UB(cameraUB);
+GLOBAL_POINT_LIGHT_UB(pointLightUB);
+
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float2 tex : TEXCOORD0;
+};
+
+struct PS_OUTPUT
+{
+	float4 color : SV_TARGET0;
+};
+
+PS_OUTPUT main(PixelInputType input) : SV_TARGET
+{
+	PS_OUTPUT output;
+
+	float4 outputColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float shadowTerm = 0;
+	float diffuse;
+	float4 albedoGloss = 0.0f;
+	float4 position = 0.0f;
+	float3 normal = 0.0f;
+	float3 lightDirection;
+	float lightVecLen;
+	int2 screenCoords = int2(input.position.xy);
+
+#if MSAA > 1
+	for (int sampleIndex = 0; sampleIndex < MSAA; sampleIndex++)
+	{
+		position += positionMap.Load(screenCoords, sampleIndex);
+		albedoGloss += colorMap.Load(screenCoords, sampleIndex);
+		normal += normalMap.Load(screenCoords, sampleIndex);
+	}
+	position /= MSAA;
+	albedoGloss /= MSAA;
+	normal /= MSAA;
+#else
+	position = positionMap.Sample(SampleTypePoint, input.tex);
+	albedoGloss = colorMap.Sample(SampleTypePoint, input.tex);
+	normal = normalMap.Sample(SampleTypePoint, input.tex);
+#endif
+
+	lightDirection = pointLightUB.position - position.xyz;
+	lightVecLen = length(lightDirection);
+
+	//float4 projectTexCoord;
+	//projectTexCoord.x = projectTexCoord.x / (abs(projectTexCoord.x / projectTexCoord.w) + 1.0f) / 2;
+	//projectTexCoord.y = projectTexCoord.y / (abs(projectTexCoord.y / projectTexCoord.w) + 1.0f) / 2;
+	//projectTexCoord.x *= 0.5f;
+	//projectTexCoord.y = -projectTexCoord.y*0.5f;
+
+	float bias = 0.02 * tan(acos(dot(normal, normalize(lightDirection)))) + lightVecLen * 0.002f;
+
+	[unroll]
+	for (int i = 0; i < 64; i++)
+	{
+		shadowTerm += g_texReflectCube.SampleCmp(SamplerTypeComparisionPoint, -normalize(lightDirection) + (PoissonDisc[i] * 4 * (1.0f / 1024.0f)), lightVecLen - bias).r;
+	}
+
+	shadowTerm /= 64;
+
+	float3 viewVecN = normalize(cameraUB.position - position.xyz);
+	float3 lightVecN = lightDirection / lightVecLen;
+	float3 halfVecN = normalize(lightVecN + viewVecN);
+
+	const float shininess = 100.0f;
+	float specular = pow(saturate(dot(halfVecN, normal.xyz)), shininess);
+	float specularTerm = albedoGloss.a * specular;
+	diffuse = saturate(dot(normal.xyz, normalize(lightDirection)));
+
+	outputColor += (specularTerm + diffuse) * pointLightUB.color * pointLightUB.multiplier;
+
+	outputColor = outputColor * shadowTerm;
+	outputColor *= saturate(1.0f - (lightVecLen / pointLightUB.radius));
+
+	output.color = float4(outputColor.rgb, 0);
+
+	return output;
+}

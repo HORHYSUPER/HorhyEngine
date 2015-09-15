@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene>
+  <scenename>Data/Models/Terrain_2.FBX</scenename>
+  <nodeProp>
+    <Model physType="rigidStatic" detailTessellationHeightScale="0,5">Plane001</Model>
+  </nodeProp>
+</scene>

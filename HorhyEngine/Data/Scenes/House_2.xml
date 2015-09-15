@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene>
+  <scenename>Data/Models/House_2.FBX</scenename>
+  <nodeProp>
+    <Model physType="rigidStatic" detailTessellationHeightScale="0,05">Box001</Model>
+  </nodeProp>
+</scene>

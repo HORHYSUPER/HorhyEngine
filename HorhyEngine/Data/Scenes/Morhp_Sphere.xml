@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene>
+  <scenename>Data/Models/Morhp_Sphere.FBX</scenename>
+  <nodeProp>
+    <Model physType="rigidStatic" detailTessellationHeightScale="0">Sphere001</Model>
+  </nodeProp>
+</scene>

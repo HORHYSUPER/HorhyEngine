@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene>
+  <scenename>Data/Models/hymer_camper.FBX</scenename>
+  <nodeProp>
+    <Model physType="rigidStatic" detailTessellationHeightScale="0">hymer</Model>
+  </nodeProp>
+</scene>

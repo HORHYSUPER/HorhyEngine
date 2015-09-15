@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<level name="Уровень 1">
+  <objects>
+    <object posX="0,0" posY="-1,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">House_2</object>
+    <!--<object posX="0,0" posY="0,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">House_4</object>
+    <object posX="0,0" posY="0,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="-1,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">Terrain_3</object>-->
+    <!--<object posX="0,0" posY="0,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="1,0" rotY="1,0" rotZ="1,0">humanoid</object>
+    <object posX="30,0" posY="100,0" posZ="30,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="1,0" rotY="1,0" rotZ="1,0">Morhp_Sphere</object>
+    <object posX="0,0" posY="0,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">Dresser</object>
+    <object posX="0,0" posY="-500,0" posZ="53,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">Sponza</object>
+    <object posX="0,0" posY="-1,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">Terrain_1</object>
+    <object posX="0,0" posY="-1,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">Terrain_3</object>
+    <object posX="0,0" posY="10,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">Scene_1</object>
+    <object posX="0,0" posY="0,05" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">House_1</object>
+    <object posX="-10,0" posY="0,05" posZ="-20,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">House_2</object>
+    <object posX="0,0" posY="0,0" posZ="0,0" scaleX="1,0" scaleY="1,0" scaleZ="1,0" rotX="0,0" rotY="0,0" rotZ="0,0">House_4</object>
+    <object posX="0,0" posY="0,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="10,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="20,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="30,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="40,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="50,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="60,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="70,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="80,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="90,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>
+    <object posX="0,0" posY="100,0" posZ="0,0" scaleX="3,0" scaleY="3,0" scaleZ="3,0" rotX="0,0" rotY="0,0" rotZ="0,0">Hymer_Camper</object>-->
+  </objects>
+</level>

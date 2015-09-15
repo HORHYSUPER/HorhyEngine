@@ -1,0 +1,31 @@
+#include "globals.hlsl"
+#include "AdaptiveModel.hlsl"
+
+#define MAX_BONE_MATRICES 64
+
+GLOBAL_CAMERA_UB(cameraUB);
+
+struct PS_INPUT
+{
+	float4 vPosition        : SV_POSITION;
+	float4 vWorldPos		: POSITION;
+	float3 vNormal			: NORMAL;
+	float3 vBinormal		: BINORMAL;
+	float3 vTangent			: TANGENT;
+	float2 texCoord			: TEXCOORD0;
+	uint RTIndex : SV_RenderTargetArrayIndex;
+};
+
+struct PS_OUTPUT
+{
+	float depth : SV_TARGET0;
+};
+
+PS_OUTPUT main(PS_INPUT i)
+{
+	PS_OUTPUT output;
+
+	output.depth = distance(i.vWorldPos.xyz, cameraUB.position.xyz);
+
+	return output;
+}

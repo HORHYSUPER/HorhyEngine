@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene>
+  <scenename>Data/Models/Humanoid.FBX</scenename>
+  <nodeProp>
+    <Model physType="rigidStatic" detailTessellationHeightScale="0">Humanoid</Model>
+  </nodeProp>
+</scene>

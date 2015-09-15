@@ -1,0 +1,119 @@
+#include "globals.hlsl"
+#include "AdaptiveModel.hlsl"
+
+#define MAX_BONE_MATRICES 64
+#ifndef BLEND_SHAPE_DEFORMER_COUNT
+#define BLEND_SHAPE_DEFORMER_COUNT 16
+#endif
+
+struct Influence
+{
+	vector position;
+	vector normal;
+};
+
+Texture2D g_nmhTexture :  register(NORMAL_TEX_BP);
+
+SamplerState g_samLinear : register(COLOR_SAM_BP);
+
+GLOBAL_CAMERA_UB(cameraUB);
+
+cbuffer CustomUB: register(CUSTOM0_UB_BP)
+{
+	struct
+	{
+		matrix	mWorld;								// World matrix
+		float	material;							// Obfect ID, or anything else ID
+		vector	vTessellationFactor;				// Edge, inside, minimum tessellation factor and 1/desired triangle size
+		float	vdetailTessellationHeightScale;		// Height scale for detail tessellation of grid surface
+		vector	vFrustumPlaneEquation[4];			// View frustum plane equations
+		matrix	mConstBone[MAX_BONE_MATRICES];
+		vector	vDiffuseColor;
+		float	specularLevel;
+		float	timeElapsed;
+		bool	hasDiffuseTexture;
+		bool	hasSpecularTexture;
+		bool	hasNormalTexture;
+	}modelCustomUB;
+};
+
+struct HS_CONSTANT_DATA_OUTPUT
+{
+	float    Edges[3]        : SV_TessFactor;
+	float    Inside : SV_InsideTessFactor;
+};
+
+struct HS_CONTROL_POINT_OUTPUT
+{
+	float4 vPosition    : SV_POSITION;
+	float4 vWorldPos	: POSITION;
+	float3 vNormal		: NORMAL;
+	float3 vBinormal	: BINORMAL;
+	float3 vTangent		: TANGENT;
+	float2 texCoord		: TEXCOORD0;
+	uint RTIndex : RTARRAYINDEX;
+};
+
+struct DS_OUTPUT
+{
+	float4 vPosition    : SV_POSITION;
+	float4 vWorldPos	: POSITION;
+	float3 vNormal		: NORMAL;
+	float3 vBinormal	: BINORMAL;
+	float3 vTangent		: TANGENT;
+	float2 texCoord		: TEXCOORD0;
+	uint RTIndex : RTARRAYINDEX;
+};
+
+[domain("tri")]
+DS_OUTPUT main(HS_CONSTANT_DATA_OUTPUT input, float3 BarycentricCoordinates : SV_DomainLocation,
+	const OutputPatch<HS_CONTROL_POINT_OUTPUT, 3> TrianglePatch)
+{
+	DS_OUTPUT output = (DS_OUTPUT)0;
+
+	// Interpolate world space position with barycentric coordinates
+	float3 vWorldPos = BarycentricCoordinates.x * TrianglePatch[0].vWorldPos +
+		BarycentricCoordinates.y * TrianglePatch[1].vWorldPos +
+		BarycentricCoordinates.z * TrianglePatch[2].vWorldPos;
+	
+	// Interpolate world space normal and renormalize it
+	float3 vNormal = BarycentricCoordinates.x * TrianglePatch[0].vNormal +
+		BarycentricCoordinates.y * TrianglePatch[1].vNormal +
+		BarycentricCoordinates.z * TrianglePatch[2].vNormal;
+	vNormal = normalize(vNormal);
+
+	float3 vBinormal = BarycentricCoordinates.x * TrianglePatch[0].vBinormal +
+		BarycentricCoordinates.y * TrianglePatch[1].vBinormal +
+		BarycentricCoordinates.z * TrianglePatch[2].vBinormal;
+	vBinormal = normalize(vBinormal);
+
+	float3 vTangent = BarycentricCoordinates.x * TrianglePatch[0].vTangent +
+		BarycentricCoordinates.y * TrianglePatch[1].vTangent +
+		BarycentricCoordinates.z * TrianglePatch[2].vTangent;
+	vTangent = normalize(vTangent);
+
+	// Interpolate other inputs with barycentric coordinates
+	output.texCoord = BarycentricCoordinates.x * TrianglePatch[0].texCoord +
+		BarycentricCoordinates.y * TrianglePatch[1].texCoord +
+		BarycentricCoordinates.z * TrianglePatch[2].texCoord;
+
+	// Calculate MIP level to fetch normal from
+	float fHeightMapMIPLevel = clamp((distance(vWorldPos, cameraUB.position) - 10.0f) / 10.0f, 0.0f, 3.0f);
+
+	// Sample normal and height map
+	float4 vNormalHeight = g_nmhTexture.SampleLevel(g_samLinear, output.texCoord, fHeightMapMIPLevel);
+	// Displace vertex along normal
+	vWorldPos += vNormal * (modelCustomUB.vdetailTessellationHeightScale * (vNormalHeight.w - 1.0f));
+	
+	// Transform world position with viewprojection matrix
+	output.vPosition = mul(float4(vWorldPos, 1.0), cameraUB.viewProjMatrix);
+	output.vWorldPos = float4(vWorldPos, 1.0);
+
+	// Per-vertex lighting
+	output.vNormal = vNormal;
+	output.vBinormal = vBinormal;
+	output.vTangent = vTangent;
+	output.RTIndex = TrianglePatch[0].RTIndex;
+	
+    return output;
+}
