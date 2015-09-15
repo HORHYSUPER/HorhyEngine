@@ -53,7 +53,7 @@ bool DirectionalLight::Init()
 {
 	lightType = 0;
 
-	m_CascadeConfig.m_nCascadeLevels = 8;
+	m_CascadeConfig.m_nCascadeLevels = 1;
 	m_CascadeConfig.m_iBufferSize = 1024;
 	m_CascadeConfig.m_ShadowBufferFormat = (SHADOW_TEXTURE_FORMAT)0;
 
