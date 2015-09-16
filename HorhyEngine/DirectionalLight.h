@@ -167,6 +167,7 @@ namespace D3D11Framework
 		// D3D11 variables
 		PipelineStateObject					*m_pDirectionalLightPso;
 		DX12_RenderTargetConfig				*m_pSceneRTC;
+		DX12_RenderTargetConfig				*m_pCSMRTC;
 		ID3D11Texture2D*                    m_pCascadedShadowMapTexture;
 		ID3D11DepthStencilView*             m_pCascadedShadowMapDSV;
 		ID3D11ShaderResourceView*           m_pCascadedShadowMapSRV;

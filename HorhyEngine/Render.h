@@ -240,9 +240,6 @@ namespace D3D11Framework
 		ComPtr<ID3D12DescriptorHeap> m_samplerHeap;
 		ComPtr<ID3D12PipelineState> m_pipelineState;
 		ComPtr<ID3D12PipelineState> m_pipelineStateShadowMap;
-
-		D3D12_VIEWPORT m_d3d12viewport;
-		D3D12_RECT m_scissorRect;
 		UINT												m_cbvDescriptorSize;
 		UINT8*												m_mappedConstantBuffer;
 		UINT												m_cbvSrvUavHeapElements;

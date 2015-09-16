@@ -53,7 +53,7 @@ bool DirectionalLight::Init()
 {
 	lightType = 0;
 
-	m_CascadeConfig.m_nCascadeLevels = 1;
+	m_CascadeConfig.m_nCascadeLevels = 8;
 	m_CascadeConfig.m_iBufferSize = 1024;
 	m_CascadeConfig.m_ShadowBufferFormat = (SHADOW_TEXTURE_FORMAT)0;
 
@@ -80,9 +80,8 @@ bool DirectionalLight::Init()
 
 	// SHADOW_MAP_RT
 	RenderTargetDesc rtDesc;
-	rtDesc.width = 1024;
-	rtDesc.height = 1024;
-	rtDesc.depth = m_CascadeConfig.m_nCascadeLevels;
+	rtDesc.width = m_CascadeConfig.m_iBufferSize * m_CascadeConfig.m_nCascadeLevels;
+	rtDesc.height = m_CascadeConfig.m_iBufferSize;
 	rtDesc.depthStencilBufferDesc.format = DXGI_FORMAT_D32_FLOAT;
 	m_pShadowMapRT = Engine::GetRender()->CreateRenderTarget(rtDesc);
 	if (!m_pShadowMapRT)
@@ -138,12 +137,36 @@ bool DirectionalLight::Init()
 	if (!m_pSamShadowPCF)
 		return false;
 
-	RtConfigDesc rtcDesc;
-	rtcDesc.numColorBuffers = 0;
-	rtcDesc.flags = DS_READ_ONLY_RTCF;
-	m_pSceneRTC = Engine::GetRender()->CreateRenderTargetConfig(rtcDesc);
-	if (!m_pSceneRTC)
-		return false;
+	{
+		RtConfigDesc rtcDesc;
+		rtcDesc.numColorBuffers = 1;
+		rtcDesc.flags = DS_READ_ONLY_RTCF;
+		m_pSceneRTC = Engine::GetRender()->CreateRenderTargetConfig(rtcDesc);
+		if (!m_pSceneRTC)
+			return false;
+	}
+
+	{
+		RtConfigDesc rtcDesc;
+		rtcDesc.numColorBuffers = 0;
+		rtcDesc.flags = DS_READ_ONLY_RTCF;
+		for (INT index = 0; index < m_CascadeConfig.m_nCascadeLevels; ++index)
+		{
+			rtcDesc.viewports[index].Height = (FLOAT)m_CascadeConfig.m_iBufferSize;
+			rtcDesc.viewports[index].Width = (FLOAT)m_CascadeConfig.m_iBufferSize;
+			rtcDesc.viewports[index].MaxDepth = 1.0f;
+			rtcDesc.viewports[index].MinDepth = 0.0f;
+			rtcDesc.viewports[index].TopLeftX = (FLOAT)(m_CascadeConfig.m_iBufferSize * index);
+			rtcDesc.viewports[index].TopLeftY = 0;
+			rtcDesc.scissorRects[index].left = static_cast<LONG>(m_CascadeConfig.m_iBufferSize * index);
+			rtcDesc.scissorRects[index].top = static_cast<LONG>(0);
+			rtcDesc.scissorRects[index].right = static_cast<LONG>(m_CascadeConfig.m_iBufferSize * index + m_CascadeConfig.m_iBufferSize);
+			rtcDesc.scissorRects[index].bottom = static_cast<LONG>(m_CascadeConfig.m_iBufferSize);
+		}
+		m_pCSMRTC = Engine::GetRender()->CreateRenderTargetConfig(rtcDesc);
+		if (!m_pCSMRTC)
+			return false;
+	}
 
 	{
 		string msaa = to_string(static_cast<int>(MSAA_COUNT));
@@ -257,7 +280,8 @@ void DirectionalLight::DrawShadowSurface(DrawCmd &drawCmd)
 	{
 		vSceneAABBPointsLightSpace[index] = XMVector4Transform(vSceneAABBPointsLightSpace[index], matLightCameraView);
 	}
-	
+
+
 	FLOAT fFrustumIntervalBegin, fFrustumIntervalEnd;
 	XMVECTOR vLightCameraOrthographicMin;  // light space frustrum aabb 
 	XMVECTOR vLightCameraOrthographicMax;
@@ -445,7 +469,7 @@ void DirectionalLight::DrawShadowSurface(DrawCmd &drawCmd)
 		m_fCascadePartitionsFrustum[iCascadeIndex] = fFrustumIntervalEnd;
 	}
 	m_matShadowView = m_pLightCamera->GetViewMatrix();
-
+	
 	//ID3D11ShaderResourceView *pnullSRV[] = { NULL };
 	//_MUTEXLOCK(Engine::m_pMutex);
 	//Engine::GetRender()->GetDeviceContext()->CSSetShaderResources(3, 1, pnullSRV);
@@ -484,7 +508,7 @@ void DirectionalLight::DrawShadowSurface(DrawCmd &drawCmd)
 		m_pCascadesProjectionsUB->Update(&ÑMProjMatrices);
 
 		//m_pLightCamera->SetProjection(m_matShadowProj[currentCascade]);
-		m_pLightCamera->SetProjection(m_matShadowProj[0]);
+		//m_pLightCamera->SetProjection(m_matShadowProj[0]);
 		m_pLightCamera->Render(1);
 
 		//m_BufferData.viewMatrix = XMMatrixTranspose(m_matShadowView);
@@ -512,8 +536,7 @@ void DirectionalLight::DrawShadowSurface(DrawCmd &drawCmd)
 		drawCmd.numInstances = m_CascadeConfig.m_nCascadeLevels;
 		drawCmd.renderTargets[0] = m_pShadowMapRT;
 		drawCmd.customUBs[1] = m_pCascadesProjectionsUB;
-		//drawCmd.renderTargetConfigs[0] = m_pSceneRTC;
-		//drawCmd.customUBs[1] = m_pCubicViewUB;
+		drawCmd.renderTargetConfigs[0] = m_pCSMRTC;
 		//Engine::m_pGameWorld->RenderWorld(CASCADED_SHADOW_RENDER, Engine::GetRender()->GetCamera());
 	}
 
@@ -614,7 +637,7 @@ void DirectionalLight::DrawScene(RENDER_TYPE renderType)
 	gpuCmd.draw.numInstances = 1;
 	gpuCmd.draw.primitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 	gpuCmd.draw.renderTargets[0] = Engine::GetRender()->GetRenderTarget(GBUFFERS_RT_ID);
-	//gpuCmd.draw.renderTargetConfigs[0] = m_pSceneRTC;
+	gpuCmd.draw.renderTargetConfigs[0] = m_pSceneRTC;
 	gpuCmd.draw.textures[CUSTOM0_TEX_BP] = Engine::GetRender()->GetRenderTarget(GBUFFERS_RT_ID)->GetTexture(1);
 	gpuCmd.draw.textures[CUSTOM1_TEX_BP] = Engine::GetRender()->GetRenderTarget(GBUFFERS_RT_ID)->GetTexture(2);
 	gpuCmd.draw.textures[CUSTOM2_TEX_BP] = Engine::GetRender()->GetRenderTarget(GBUFFERS_RT_ID)->GetTexture(3);
@@ -623,33 +646,33 @@ void DirectionalLight::DrawScene(RENDER_TYPE renderType)
 	gpuCmd.draw.samplers[CUSTOM0_TEX_ID] = m_pSamShadowPCF;
 	Engine::GetRender()->AddGpuCmd(gpuCmd);
 
-	switch (renderType)
-	{
-	case D3D11Framework::GBUFFER_FILL_RENDER:
-		break;
-	case D3D11Framework::CASCADED_SHADOW_RENDER:
-		//m_prsScene->Set();
-		//m_pSamShadowPCF->Bind(CUSTOM0_TEX_BP, PIXEL_SHADER);
-		//_MUTEXLOCK(Engine::m_pMutex);
-		//Engine::GetRender()->GetDeviceContext()->PSSetShader(m_pCascadedShadowShader->GetPixelShader(0), NULL, 0);
-		//Engine::GetRender()->GetDeviceContext()->PSSetShaderResources(9, 1, &m_pCascadedShadowMapSRV);
-		//_MUTEXUNLOCK(Engine::m_pMutex);
-		//m_pUniformBuffer->Bind(LIGHT_UB_BP, VERTEX_SHADER);
-		//m_pUniformBuffer->Bind(LIGHT_UB_BP, PIXEL_SHADER);
-		break;
-	case D3D11Framework::CUBEMAP_DEPTH_RENDER:
-		break;
-	case D3D11Framework::CUBEMAP_COLOR_RENDER:
-		break;
-	case D3D11Framework::VOXELIZE_RENDER:
-		//m_pSamShadowPCF->Bind(CUSTOM0_TEX_BP, COMPUTE_SHADER);
-		//_MUTEXLOCK(Engine::m_pMutex);
-		//Engine::GetRender()->GetDeviceContext()->CSSetShaderResources(2, 1, &m_pCascadedShadowMapSRV);
-		//_MUTEXUNLOCK(Engine::m_pMutex);
-		//m_pUniformBuffer->Bind(LIGHT_UB_BP, COMPUTE_SHADER);
-	default:
-		break;
-	}
+	//switch (renderType)
+	//{
+	//case D3D11Engine::GBUFFER_FILL_RENDER:
+	//	break;
+	//case D3D11Engine::CASCADED_SHADOW_RENDER:
+	//	//m_prsScene->Set();
+	//	//m_pSamShadowPCF->Bind(CUSTOM0_TEX_BP, PIXEL_SHADER);
+	//	//_MUTEXLOCK(Engine::m_pMutex);
+	//	//Engine::GetRender()->GetDeviceContext()->PSSetShader(m_pCascadedShadowShader->GetPixelShader(0), NULL, 0);
+	//	//Engine::GetRender()->GetDeviceContext()->PSSetShaderResources(9, 1, &m_pCascadedShadowMapSRV);
+	//	//_MUTEXUNLOCK(Engine::m_pMutex);
+	//	//m_pUniformBuffer->Bind(LIGHT_UB_BP, VERTEX_SHADER);
+	//	//m_pUniformBuffer->Bind(LIGHT_UB_BP, PIXEL_SHADER);
+	//	break;
+	//case D3D11Engine::CUBEMAP_DEPTH_RENDER:
+	//	break;
+	//case D3D11Engine::CUBEMAP_COLOR_RENDER:
+	//	break;
+	//case D3D11Engine::VOXELIZE_RENDER:
+	//	//m_pSamShadowPCF->Bind(CUSTOM0_TEX_BP, COMPUTE_SHADER);
+	//	//_MUTEXLOCK(Engine::m_pMutex);
+	//	//Engine::GetRender()->GetDeviceContext()->CSSetShaderResources(2, 1, &m_pCascadedShadowMapSRV);
+	//	//_MUTEXUNLOCK(Engine::m_pMutex);
+	//	//m_pUniformBuffer->Bind(LIGHT_UB_BP, COMPUTE_SHADER);
+	//default:
+	//	break;
+	//}
 }
 
 //--------------------------------------------------------------------------------------

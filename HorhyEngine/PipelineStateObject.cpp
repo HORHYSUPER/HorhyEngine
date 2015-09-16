@@ -153,7 +153,9 @@ bool PipelineStateObject::Create(const PIPELINE_STATE_DESC &inPsoDesc)
 			inPsoDesc.renderTartet->GetFormat() :
 			StringToDXGIFormat(inPsoDesc.shader->renderTargets[i].format);
 	}
-	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+	psoDesc.DSVFormat = inPsoDesc.renderTartet ?
+		inPsoDesc.renderTartet->GetDepthFormat() :
+		DXGI_FORMAT_D32_FLOAT;
 	psoDesc.SampleDesc.Count = 1;
 
 	ThrowIfFailed(Engine::GetRender()->GetD3D12Device()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));

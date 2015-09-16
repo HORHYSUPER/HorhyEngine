@@ -110,33 +110,33 @@ bool DX12_Texture::CreateRenderable(unsigned int width, unsigned int height, uns
 			static_cast<UINT>(height),
 			static_cast<UINT>(depth),
 			static_cast<UINT>(numLevels),
-			format,
+			GetDepthResourceFormat(format),
 			sampleCountMSAA,
 			0,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN,
-			format == DXGI_FORMAT_R32G8X24_TYPELESS ?
+			IsDepthFormat(format) ?
 			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL :
 			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
 		D3D12_CLEAR_VALUE clearValue;
-		if (format != DXGI_FORMAT_R32G8X24_TYPELESS)
+		if (IsDepthFormat(format))
 		{
-			const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-			memcpy(clearValue.Color, clearColor, sizeof(clearColor));
+			clearValue.DepthStencil.Depth = 1.0f;
+			clearValue.DepthStencil.Stencil = 0;
 			clearValue.Format = format;
 		}
 		else
 		{
-			clearValue.DepthStencil.Depth = 1.0f;
-			clearValue.DepthStencil.Stencil = 0;
-			clearValue.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+			const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			memcpy(clearValue.Color, clearColor, sizeof(clearColor));
+			clearValue.Format = format;
 		}
 
 		ThrowIfFailed(Engine::GetRender()->GetD3D12Device()->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE,
 			&renderTargetDesc,
-			format == DXGI_FORMAT_R32G8X24_TYPELESS ?
+			IsDepthFormat(format) ?
 			D3D12_RESOURCE_STATE_DEPTH_WRITE :
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			&clearValue,
@@ -145,9 +145,7 @@ bool DX12_Texture::CreateRenderable(unsigned int width, unsigned int height, uns
 		// Create a SRV of the intermediate render target.
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.Format = format == DXGI_FORMAT_R32G8X24_TYPELESS ?
-			DXGI_FORMAT_R32_FLOAT :
-			renderTargetDesc.Format;
+		srvDesc.Format = GetDepthSRVFormat(format);
 
 		if (rtFlags & TEXTURE_CUBE_RTF)
 		{

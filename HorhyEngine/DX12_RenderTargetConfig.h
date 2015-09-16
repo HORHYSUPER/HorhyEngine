@@ -1,3 +1,6 @@
+#pragma once
+
+#define MAX_NUM_VIEWPORTS 8
 
 namespace D3D11Framework
 {
@@ -17,6 +20,19 @@ namespace D3D11Framework
 			numUnorderedAccessViews(0),
 			flags(0)
 		{
+			for (unsigned int i = 0; i < MAX_NUM_VIEWPORTS; i++)
+			{
+				viewports[i].Height = 0.0f;
+				viewports[i].Width = 0.0f;
+				viewports[i].MaxDepth = 1.0f;
+				viewports[i].MinDepth = 0.0f;
+				viewports[i].TopLeftX = 0;
+				viewports[i].TopLeftY = 0;
+				scissorRects[i].right = 0;
+				scissorRects[i].bottom = 0;
+				scissorRects[i].left = 0;
+				scissorRects[i].top = 0;
+			}
 		}
 
 		bool operator== (const RtConfigDesc &desc) const
@@ -32,10 +48,25 @@ namespace D3D11Framework
 			return true;
 		}
 
+		unsigned int CalcNumViewPorts() const
+		{
+			unsigned int numViewPorts = 0;
+			for (unsigned int i = 0; i < MAX_NUM_VIEWPORTS; i++)
+			{
+				if (viewports[i].Height != 0)
+					numViewPorts++;
+				else
+					break;
+			}
+			return numViewPorts;
+		}
+
 		unsigned int firstColorBufferIndex; // index of first render-target to render into 
 		unsigned int numColorBuffers; // number of render-targets to render into
 		unsigned int numUnorderedAccessViews; // number of unordered access views to write into
 		unsigned int flags;
+		D3D12_VIEWPORT viewports[MAX_NUM_VIEWPORTS];
+		D3D12_RECT scissorRects[MAX_NUM_VIEWPORTS];
 	};
 
 	class DX12_RenderTargetConfig

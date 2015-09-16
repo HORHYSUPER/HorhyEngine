@@ -136,6 +136,11 @@ namespace D3D11Framework
 			return rtFormats[index];
 		}
 
+		DXGI_FORMAT GetDepthFormat() const
+		{
+			return depthFormat;
+		}
+
 	private:
 		unsigned int width, height, depth;
 		unsigned int numColorBuffers;
@@ -143,12 +148,14 @@ namespace D3D11Framework
 		unsigned int clearMask;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE *rtvHandles;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandles[2];
-		ComPtr<ID3D12Resource> m_renderTarget;
-		vector<DX12_Texture*> frameBufferTextures;
+		ComPtr<ID3D12Resource>	m_renderTarget;
+		vector<DX12_Texture*>	frameBufferTextures;
 		DXGI_FORMAT				*rtFormats;
-		DX12_Texture *depthStencilTexture;
-		D3D12_VIEWPORT viewport;
-		bool clearTarget;
+		DXGI_FORMAT				depthFormat;
+		DX12_Texture			*depthStencilTexture;
+		D3D12_VIEWPORT			m_viewport;
+		D3D12_RECT				m_scissorRect;
+		bool					clearTarget;
 
 	};
 }

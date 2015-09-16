@@ -1205,9 +1205,11 @@ bool Model::m_LoadShaders()
 		PIPELINE_STATE_DESC psoDesc;
 		psoDesc.shader = m_pGBufferFillShaderWOTess;
 		psoDesc.vertexLayout = vertexLayout;
+		psoDesc.renderTartet = Engine::GetRender()->GetRenderTarget(GBUFFERS_RT_ID);
 		pPso = Engine::GetRender()->CreatePipelineStateObject(psoDesc);
 
 		psoDesc.shader = m_pDX11ShaderCubeMap[1];
+		psoDesc.renderTartet = nullptr;
 		m_pCubeMapPso = Engine::GetRender()->CreatePipelineStateObject(psoDesc);
 
 		psoDesc.shader = m_pCSMShader;

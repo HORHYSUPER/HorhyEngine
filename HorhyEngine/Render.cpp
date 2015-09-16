@@ -482,12 +482,12 @@ bool Render::m_CreateDevice()
 		ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 	}
 
-	m_d3d12viewport.Width = static_cast<float>(m_width);
-	m_d3d12viewport.Height = static_cast<float>(m_height);
-	m_d3d12viewport.MaxDepth = 1.0f;
+	//m_d3d12viewport.Width = static_cast<float>(m_width);
+	//m_d3d12viewport.Height = static_cast<float>(m_height);
+	//m_d3d12viewport.MaxDepth = 1.0f;
 
-	m_scissorRect.right = static_cast<LONG>(m_width);
-	m_scissorRect.bottom = static_cast<LONG>(m_height);
+	//m_scissorRect.right = static_cast<LONG>(m_width);
+	//m_scissorRect.bottom = static_cast<LONG>(m_height);
 
 	for (unsigned short i = 0; i < FrameCount; i++)
 	{
@@ -766,7 +766,7 @@ void Render::SetShaderStates(const ShaderCmd &cmd, gpuCmdOrders order)
 	m_commandList[m_frameIndex]->SetPipelineState(cmd.pipelineStateObject->m_pipelineState.Get());
 	m_commandList[m_frameIndex]->SetGraphicsRootSignature(cmd.pipelineStateObject->m_rootSignature.Get());
 	//m_commandList[m_frameIndex]->RSSetViewports(1, &m_d3d12viewport);
-	m_commandList[m_frameIndex]->RSSetScissorRects(1, &m_scissorRect);
+	//m_commandList[m_frameIndex]->RSSetScissorRects(1, &m_scissorRect);
 
 	// Indicate that the back buffer will be used as a render target.m_pVertexBuffer
 	//m_commandList[m_frameIndex]->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_renderTargets[m_frameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
